@@ -1,15 +1,69 @@
 // script.js
 
 const img = new Image(); // used to load image from <input> and draw to canvas
+var canvas = document.getElementById('canvas-image');
+var ctx = canvas.getContext('2d');
+var imgInput = document.getElementById('image-input');
+var form = document.getElementById('generate-meme');
+var buttons = document.getElementById('button');
+
+/* TODO
+  on change:
+    load in the selected image into the Image object (img) src attribute
+    set the image alt attribute by extracting the image file name from the file path
+*/
+imgInput.addEventListener('change', () => {
+  const imgURL = URL.createObjectURL(imgInput.files[0]);
+  img.src = imgURL;
+  img.alt = imgInput.files[0].name;
+});
+
+/* TODO
+  on submit:
+    generate your meme by grabbing the text in the two inputs with ids text-top and text-bottom, 
+    and adding the relevant text to the canvas (note: you should still be able to add text to the canvas without an image uploaded)
+    toggle relevant buttons
+*/
+form.addEventListener('submit', (event) => {
+  let top = document.getElementById('text-top');
+  let bottom = document.getElementById('text-bottom');
+  ctx.strokeStyle = 'black';
+  ctx.fillStyle = 'gray';
+  ctx.
+  event.preventDefault();
+});
+
+/* TODO
+  on click:
+    clear the image and/or the text present
+    toggle relevant buttons
+*/
+button.addEventListener('clear', () => {
+
+});
+
+/* TODO
+  on click:
+    have the browser speak the text in the two inputs with ids text-top and text-bottom out loud using the selected
+    voice type in the voice-selection dropdown -- you might find SpeechSynthesis useful
+*/
+button.addEventListener('read text', () => {
+
+});
 
 // Fires whenever the img object loads a new image (such as with img.src =)
 img.addEventListener('load', () => {
   // TODO
-
   // Some helpful tips:
   // - Fill the whole Canvas with black first to add borders on non-square images, then draw on top
   // - Clear the form when a new image is selected
   // - If you draw the image to canvas here, it will update as soon as a new image is selected
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  dimensions = getDimmensions(canvas.width, canvas.height, img.width, img.height);
+  ctx.drawImage(img, dimensions['startX'], dimensions['startY'], dimensions['width'], dimensions['height']);
 });
 
 /**
