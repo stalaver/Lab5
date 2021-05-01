@@ -1,70 +1,116 @@
 // script.js
 
 const img = new Image(); // used to load image from <input> and draw to canvas
-var canvas = document.getElementById('canvas-image');
-var ctx = canvas.getContext('2d');
-var imgInput = document.getElementById('image-input');
-var form = document.getElementById('generate-meme');
-var buttons = document.getElementById('button');
+const canvas = document.getElementById('user-image');
+const ctx = canvas.getContext('2d');
+const img_input = document.getElementById('image-input');
+const top = document.getElementById('text-top');
+const bottom = document.getElementById('text-bottom');
+const volume = document.getElementsByTagName("img")[0];
+const slider = document.querySelector("input[type='range']");
+const voice_sel = document.getElementById('voice-selection')
+var voices = [];
+voices = speechSynthesis.getVoices();
 
-/* TODO
-  on change:
-    load in the selected image into the Image object (img) src attribute
-    set the image alt attribute by extracting the image file name from the file path
-*/
-imgInput.addEventListener('change', () => {
-  const imgURL = URL.createObjectURL(imgInput.files[0]);
-  img.src = imgURL;
-  img.alt = imgInput.files[0].name;
-});
-
-/* TODO
-  on submit:
-    generate your meme by grabbing the text in the two inputs with ids text-top and text-bottom, 
-    and adding the relevant text to the canvas (note: you should still be able to add text to the canvas without an image uploaded)
-    toggle relevant buttons
-*/
-form.addEventListener('submit', (event) => {
-  let top = document.getElementById('text-top');
-  let bottom = document.getElementById('text-bottom');
-  ctx.strokeStyle = 'black';
-  ctx.fillStyle = 'gray';
-  ctx.
-  event.preventDefault();
-});
-
-/* TODO
-  on click:
-    clear the image and/or the text present
-    toggle relevant buttons
-*/
-button.addEventListener('clear', () => {
-
-});
-
-/* TODO
-  on click:
-    have the browser speak the text in the two inputs with ids text-top and text-bottom out loud using the selected
-    voice type in the voice-selection dropdown -- you might find SpeechSynthesis useful
-*/
-button.addEventListener('read text', () => {
-
-});
+//buttons
+const buttons = document.getElementById('button-group');
+const generate = document.querySelector("button[type='submit']");
+const clear = document.querySelector("button[type='reset']");
+const read = document.querySelector("button[type='button']");
 
 // Fires whenever the img object loads a new image (such as with img.src =)
 img.addEventListener('load', () => {
-  // TODO
-  // Some helpful tips:
-  // - Fill the whole Canvas with black first to add borders on non-square images, then draw on top
-  // - Clear the form when a new image is selected
-  // - If you draw the image to canvas here, it will update as soon as a new image is selected
+  //toggle relevant buttons
+  generate.disabled = false;
+  clear.disabled = true;
+  read.disabled = true;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  dimensions = getDimmensions(canvas.width, canvas.height, img.width, img.height);
-  ctx.drawImage(img, dimensions['startX'], dimensions['startY'], dimensions['width'], dimensions['height']);
+  var dimensions = getDimmensions(canvas.width, canvas.height, img.width, img.height);
+  ctx.drawImage(img, dimensions.startX, dimensions.startY, dimensions.width, dimensions.height);
 });
+
+img_input.addEventListener('change', (event) => {
+  const imgURL = URL.createObjectURL(img_input.files[0]);
+  img.src = imgURL;
+  img.alt = img_input.files[0].name;
+});
+
+generate.addEventListener('click', (event) => {
+  //toggle buttons
+  generate.disabled = true;
+  clear.disabled = false;
+  read.disabled = false;
+
+  ctx.strokeStyle = 'black';
+  ctx.fillStyle = 'white';
+  ctx.font = '50px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'center';
+  ctx.strokeText(top.value, canvas.width/2, 50);
+  ctx.fillText(top.value, canvas.width/2, 50);
+  ctx.strokeText(bottom.value, canvas.width/2, canvas.height - 20);
+  ctx.fillText(bottom.value, canvas.width/2, canvas.height - 20);
+  event.preventDefault();
+});
+
+clear.addEventListener('click', (event) => {
+  //toggle buttons
+  generate.disabled = false;
+  clear.disabled = true;
+  read.disabled = true;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+});
+
+slider.addEventListener('input', value => {
+  if(Number(slider.value) == 0){volume.src = "icons/volume-level-0.svg"};
+  if(Number(slider.value) > 0 && Number(slider.value) < 34){volume.src = "icons/volume-level-1.svg"};
+  if(Number(slider.value) > 33 && Number(slider.value) < 67){volume.src = "icons/volume-level-2.svg"};
+  if(Number(slider.value) > 66 && Number(slider.value) < 101){volume.src = "icons/volume-level-3.svg"};
+
+});
+
+setTimeout(populateVoiceList, 100);
+//Grabbed from Mozilla SpeechSynthesis
+function populateVoiceList() {
+  voices = speechSynthesis.getVoices();
+  voice_sel.remove(0);
+  for (var i = 0; i < voices.length; i++) {
+    var option = document.createElement('option');
+    option.textContent = voices[i].name + ' (' + voices[i].lang + ')';
+    
+    if(voices[i].default) {
+      option.textContent += ' -- DEFAULT';
+    }
+
+    option.setAttribute('data-lang', voices[i].lang);
+    option.setAttribute('data-name', voices[i].name);
+    document.getElementById('voice-selection').appendChild(option);
+  } 
+
+  voice_sel.disabled = false;
+
+}
+
+read.addEventListener('click', (event) => {
+  let speechTop = new SpeechSynthesisUtterance(top.value);
+  let speechBottom = new SpeechSynthesisUtterance(bottom.value);
+  speechTop.volume = slider.value * 0.01;
+  speechBottom.volume = slider.value * 0.01;
+  var selectedSpeech = voice_sel.selectedOptions[0].getAttribute('data-name');
+  for (var i = 0; i < voices.length; i++) {
+    if (voices[i].name == selectedSpeech) {
+      speechTop.voice = voices[i];
+      speechBottom.voice = voices[i];
+    }
+  }
+  speechSynthesis.speak(speechTop);
+  speechSynthesis.speak(speechBottom);
+});
+
 
 /**
  * Takes in the dimensions of the canvas and the new image, then calculates the new
